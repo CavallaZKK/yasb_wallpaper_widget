@@ -85,7 +85,8 @@ class WallpaperManager(QObject):
             abs_path = os.path.abspath(image_path)
 
             # Set wallpaper for all monitors (None = all monitors)
-            desktop_wallpaper.SetWallpaper(None, abs_path)
+            monitorID = desktop_wallpaper.GetMonitorDevicePathAt(0)
+            desktop_wallpaper.SetWallpaper(monitorID, abs_path)
 
         except Exception as e:
             logging.error("Failed to set wallpaper using IDesktopWallpaper: %s", e)
