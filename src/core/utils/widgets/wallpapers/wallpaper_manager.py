@@ -11,7 +11,7 @@ from PyQt6.QtCore import QObject, QTimer, pyqtSignal
 
 from core.event_service import EventService
 from core.utils.win32.bindings.shell32 import IDesktopWallpaper
-from core.utils.win32.utils import find_focused_monitor, get_unique_display_ids
+from core.utils.win32.utils import get_focused_monitor_info, get_unique_display_ids
 
 EDD_GET_DEVICE_INTERFACE_NAME = 0x00000001
 
@@ -87,14 +87,12 @@ class WallpaperManager(QObject):
             # Convert to absolute path
             abs_path = os.path.abspath(image_path)
 
-            # Set wallpaper for all monitors (None = all monitors)
-            focused_adapter = find_focused_monitor()
+            # Find the focused monitor
+            focused_adapter = get_focused_monitor_info()["device"]
             devices = get_unique_display_ids(EDD_GET_DEVICE_INTERFACE_NAME)
-            try:
-                monitorID = next(x["UniqueID"] for x in devices if x["Adapter"] == focused_adapter)
-            except StopIteration:
-                monitorID = None
+            monitorID = next(x["UniqueID"] for x in devices if x["Adapter"] == focused_adapter)
 
+            # Set wallpaper for specified monitors (None = all monitors)
             desktop_wallpaper.SetWallpaper(monitorID, abs_path)
 
         except Exception as e:

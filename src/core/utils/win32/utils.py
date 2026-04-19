@@ -397,20 +397,15 @@ def set_foreground_hwnd(hwnd):
 
 def get_unique_display_ids(dwFlags=0):
     device_ids = []
-    i = 0
+    adapter_num = 0
     while True:
         try:
-            # 1. Get the display adapter (e.g., \\.\DISPLAY1)
-            adapter = win32api.EnumDisplayDevices(None, i, 0)
-
-            # 2. Get the monitor connected to this adapter
-            # Passing adapter.DeviceName tells Windows to look at the monitor on that adapter
-            j = 0
+            # For each adapter, iterate through connected monitors
+            adapter = win32api.EnumDisplayDevices(None, adapter_num, dwFlags)
+            device_num = 0
             while True:
                 try:
-                    monitor = win32api.EnumDisplayDevices(adapter.DeviceName, j, dwFlags)
-
-                    # The DeviceID is the unique hardware/PnP ID
+                    monitor = win32api.EnumDisplayDevices(adapter.DeviceName, device_num, dwFlags)
                     device_ids.append(
                         {
                             "Adapter": adapter.DeviceName,
@@ -418,22 +413,21 @@ def get_unique_display_ids(dwFlags=0):
                             "UniqueID": monitor.DeviceID,
                         }
                     )
-                    j += 1
+                    device_num += 1
                 except:
                     break
-            i += 1
+            adapter_num += 1
         except:
             break
     return device_ids
 
 
-def find_focused_monitor():
-    """Find the monitor that is focused based on active window, and return its gdi_name"""
+def get_focused_monitor_info():
+    """Find the display that is focused based on active window"""
 
     hwnd = win32gui.GetForegroundWindow()
     monitor_hwnd = get_monitor_hwnd(hwnd)
-    monitor_info = get_monitor_info(monitor_hwnd)
-    return monitor_info["device"]
+    return get_monitor_info(monitor_hwnd)
 
 
 def find_focused_screen(follow_mouse, follow_window, follow_primary=False, screens=None):
