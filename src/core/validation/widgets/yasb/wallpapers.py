@@ -42,7 +42,6 @@ class GalleryConfig(CustomBaseModel):
     image_spacing: int = Field(default=5, ge=0, le=100)
     lazy_load: bool = True
     lazy_load_fadein: int = Field(default=200, ge=0, le=1000)
-    set_all_displays: bool = True
 
 
 class CallbacksWallpapersConfig(CallbacksConfig):
@@ -58,6 +57,7 @@ class WallpapersConfig(CustomBaseModel):
     image_path: str | list[str]
     tooltip: bool = True
     run_after: list[str] = []
+    set_all_displays: bool = True
     gallery: GalleryConfig = GalleryConfig()
     animation: AnimationConfig = AnimationConfig()
     label_shadow: ShadowConfig = ShadowConfig()

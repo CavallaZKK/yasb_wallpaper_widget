@@ -198,11 +198,11 @@ class ImageLoader(QRunnable):
 class ImageGallery(QMainWindow, BaseStyledWidget):
     """ImageGallery displays a gallery of images with navigation and lazy loading features."""
 
-    def __init__(self, image_paths, gallery):
+    def __init__(self, image_paths, gallery, set_all_displays):
         super().__init__()
         self.gallery = gallery
         self._event_service = EventService()
-        self.set_all_displays = self.gallery["set_all_displays"]
+        self.set_all_displays = set_all_displays
 
         if isinstance(image_paths, str):
             self.image_paths = [image_paths]
@@ -333,6 +333,14 @@ class ImageGallery(QMainWindow, BaseStyledWidget):
         central_widget.setLayout(layout)
         layout.setSpacing(0)
         layout.setContentsMargins(0, 0, 0, 0)
+
+        # Set up the area for toggling set_all_displays
+        self.toggle_area = QPushButton("Set All Displays: " + str(self.set_all_displays))
+        self.toggle_area.setStyleSheet("background-color: #2C3E50; color: white;")
+        self.toggle_area.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.toggle_area.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.toggle_area.clicked.connect(self.toggle_set_display)
+        layout.addWidget(self.toggle_area)
 
         # Set up scroll area to handle overflow when respecting work area
         self.scroll_area = QScrollArea()
@@ -577,6 +585,11 @@ class ImageGallery(QMainWindow, BaseStyledWidget):
                 label.setProperty("class", "wallpapers-gallery-image")
             refresh_widget_style(label)
 
+    def toggle_set_display(self):
+        self.set_all_displays = not self.set_all_displays
+        self._event_service.emit_event("set_display_setting_signal", self.set_all_displays)
+        self.toggle_area.setText("Set All Displays: " + str(self.set_all_displays))
+
     # Navigation methods
     def _navigate_page(self, direction):
         """Navigate pages: direction is 1 for next, -1 for prev."""
@@ -695,7 +708,7 @@ class ImageGallery(QMainWindow, BaseStyledWidget):
         """Set the focused image as wallpaper."""
         if self.focused_index is not None:
             image_path = self.image_files[self.focused_index]
-            self._event_service.emit_event("set_wallpaper_signal", image_path, self.set_all_displays)
+            self._event_service.emit_event("set_wallpaper_signal", image_path)
 
     def showEvent(self, event):
         """Handle show event."""

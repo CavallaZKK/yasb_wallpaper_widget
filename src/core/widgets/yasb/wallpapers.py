@@ -21,6 +21,7 @@ class WallpapersWidget(BaseWidget):
             self.config.update_interval,
             self.config.change_automatically,
             self.config.run_after,
+            self.config.set_all_displays,
         )
 
         # Connect signals
@@ -56,5 +57,7 @@ class WallpapersWidget(BaseWidget):
         if self._image_gallery is not None and self._image_gallery.isVisible():
             self._image_gallery.fade_out_and_close_gallery()
         else:
-            self._image_gallery = ImageGallery(self.config.image_path, self.config.gallery.model_dump())
+            self._image_gallery = ImageGallery(
+                self.config.image_path, self.config.gallery.model_dump(), self._manager._set_all_displays
+            )
             self._image_gallery.fade_in_gallery(parent=self)

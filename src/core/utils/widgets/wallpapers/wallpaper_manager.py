@@ -19,7 +19,8 @@ EDD_GET_DEVICE_INTERFACE_NAME = 0x00000001
 class WallpaperManager(QObject):
     _instance = None
     toggle_gallery_signal = pyqtSignal(str)
-    _set_wallpaper_signal = pyqtSignal(str, bool)
+    _set_wallpaper_signal = pyqtSignal(str)
+    _set_display_setting_signal = pyqtSignal(bool)
 
     def __new__(cls):
         if cls._instance is None:
@@ -35,6 +36,7 @@ class WallpaperManager(QObject):
 
         self._image_path = None
         self._run_after = None
+        self._set_all_displays = False
         self._timer = QTimer()
         self._timer.timeout.connect(self._timer_callback)
         self._is_running = False
@@ -47,8 +49,17 @@ class WallpaperManager(QObject):
         self._set_wallpaper_signal.connect(self.change_background)
         self._event_service.register_event("set_wallpaper_signal", self._set_wallpaper_signal)
 
+        # Register Set Display handler
+        self._set_display_setting_signal.connect(self.set_display_setting)
+        self._event_service.register_event("set_display_setting_signal", self._set_display_setting_signal)
+
     def configure(
-        self, image_path: str | list[str], update_interval: int, change_automatically: bool, run_after: list[str]
+        self,
+        image_path: str | list[str],
+        update_interval: int,
+        change_automatically: bool,
+        run_after: list[str],
+        set_all_displays: bool,
     ):
         """
         Configure the manager.
@@ -59,6 +70,7 @@ class WallpaperManager(QObject):
             self._image_paths = image_path
 
         self._run_after = run_after
+        self._set_all_displays = set_all_displays
 
         if change_automatically and not self._timer_running:
             if update_interval and update_interval > 0:
@@ -71,7 +83,7 @@ class WallpaperManager(QObject):
     def _timer_callback(self):
         self.change_background()
 
-    def set_wallpaper(self, image_path: str, set_all_displays: bool):
+    def set_wallpaper(self, image_path: str):
         """
         Set the desktop wallpaper using the IDesktopWallpaper COM interface.
         Args:
@@ -90,7 +102,7 @@ class WallpaperManager(QObject):
             # Find the focused monitor
             focused_adapter = get_focused_monitor_info()["device"]
             devices = get_unique_display_ids(EDD_GET_DEVICE_INTERFACE_NAME)
-            if set_all_displays:
+            if self._set_all_displays:
                 monitorID = None
             else:
                 monitorID = next(x["UniqueID"] for x in devices if x["Adapter"] == focused_adapter)
@@ -102,7 +114,10 @@ class WallpaperManager(QObject):
             logging.error("Failed to set wallpaper using IDesktopWallpaper: %s", e)
             raise
 
-    def change_background(self, image_path: str = None, set_all_displays: bool = True):
+    def set_display_setting(self, set_all_displays: bool = False):
+        self._set_all_displays = set_all_displays
+
+    def change_background(self, image_path: str = None):
         """Change the desktop wallpaper to a new image."""
         if self._is_running:
             return
@@ -138,7 +153,7 @@ class WallpaperManager(QObject):
                 new_wallpaper = random.choice(wallpapers)
 
         try:
-            self.set_wallpaper(new_wallpaper, set_all_displays)
+            self.set_wallpaper(new_wallpaper)
             self._last_image = new_wallpaper
         except Exception as e:
             logging.error("Error setting wallpaper %s: %s", new_wallpaper, e)
