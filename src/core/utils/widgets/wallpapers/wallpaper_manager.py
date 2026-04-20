@@ -19,7 +19,7 @@ EDD_GET_DEVICE_INTERFACE_NAME = 0x00000001
 class WallpaperManager(QObject):
     _instance = None
     toggle_gallery_signal = pyqtSignal(str)
-    _set_wallpaper_signal = pyqtSignal(str)
+    _set_wallpaper_signal = pyqtSignal(str, bool)
 
     def __new__(cls):
         if cls._instance is None:
@@ -71,7 +71,7 @@ class WallpaperManager(QObject):
     def _timer_callback(self):
         self.change_background()
 
-    def set_wallpaper(self, image_path: str):
+    def set_wallpaper(self, image_path: str, set_all_displays: bool):
         """
         Set the desktop wallpaper using the IDesktopWallpaper COM interface.
         Args:
@@ -90,7 +90,10 @@ class WallpaperManager(QObject):
             # Find the focused monitor
             focused_adapter = get_focused_monitor_info()["device"]
             devices = get_unique_display_ids(EDD_GET_DEVICE_INTERFACE_NAME)
-            monitorID = next(x["UniqueID"] for x in devices if x["Adapter"] == focused_adapter)
+            if set_all_displays:
+                monitorID = None
+            else:
+                monitorID = next(x["UniqueID"] for x in devices if x["Adapter"] == focused_adapter)
 
             # Set wallpaper for specified monitors (None = all monitors)
             desktop_wallpaper.SetWallpaper(monitorID, abs_path)
@@ -99,7 +102,7 @@ class WallpaperManager(QObject):
             logging.error("Failed to set wallpaper using IDesktopWallpaper: %s", e)
             raise
 
-    def change_background(self, image_path: str = None):
+    def change_background(self, image_path: str = None, set_all_displays: bool = True):
         """Change the desktop wallpaper to a new image."""
         if self._is_running:
             return
@@ -135,7 +138,7 @@ class WallpaperManager(QObject):
                 new_wallpaper = random.choice(wallpapers)
 
         try:
-            self.set_wallpaper(new_wallpaper)
+            self.set_wallpaper(new_wallpaper, set_all_displays)
             self._last_image = new_wallpaper
         except Exception as e:
             logging.error("Error setting wallpaper %s: %s", new_wallpaper, e)

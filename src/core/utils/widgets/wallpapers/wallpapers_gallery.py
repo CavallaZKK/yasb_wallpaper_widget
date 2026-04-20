@@ -202,6 +202,7 @@ class ImageGallery(QMainWindow, BaseStyledWidget):
         super().__init__()
         self.gallery = gallery
         self._event_service = EventService()
+        self.set_all_displays = self.gallery["set_all_displays"]
 
         if isinstance(image_paths, str):
             self.image_paths = [image_paths]
@@ -694,7 +695,7 @@ class ImageGallery(QMainWindow, BaseStyledWidget):
         """Set the focused image as wallpaper."""
         if self.focused_index is not None:
             image_path = self.image_files[self.focused_index]
-            self._event_service.emit_event("set_wallpaper_signal", image_path)
+            self._event_service.emit_event("set_wallpaper_signal", image_path, self.set_all_displays)
 
     def showEvent(self, event):
         """Handle show event."""
