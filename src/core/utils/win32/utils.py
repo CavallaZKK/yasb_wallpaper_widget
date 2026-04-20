@@ -34,6 +34,8 @@ from core.utils.win32.constants import (
     SW_MAXIMIZE,
 )
 
+EDD_GET_DEVICE_INTERFACE_NAME = 0x00000001
+
 
 def get_windows_host_arch():
     """Returns the actual host machine architecture on Windows,
@@ -395,17 +397,17 @@ def set_foreground_hwnd(hwnd):
         SetForegroundWindow(int(hwnd))
 
 
-def get_unique_display_ids(dwFlags=0):
+def get_unique_display_ids():
     device_ids = []
     adapter_num = 0
     while True:
         try:
             # For each adapter, iterate through connected monitors
-            adapter = win32api.EnumDisplayDevices(None, adapter_num, dwFlags)
+            adapter = win32api.EnumDisplayDevices(None, adapter_num, 0)
             device_num = 0
             while True:
                 try:
-                    monitor = win32api.EnumDisplayDevices(adapter.DeviceName, device_num, dwFlags)
+                    monitor = win32api.EnumDisplayDevices(adapter.DeviceName, device_num, EDD_GET_DEVICE_INTERFACE_NAME)
                     device_ids.append(
                         {
                             "Adapter": adapter.DeviceName,

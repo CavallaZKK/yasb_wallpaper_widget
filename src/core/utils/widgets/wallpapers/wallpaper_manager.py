@@ -13,8 +13,6 @@ from core.event_service import EventService
 from core.utils.win32.bindings.shell32 import IDesktopWallpaper
 from core.utils.win32.utils import get_focused_monitor_info, get_unique_display_ids
 
-EDD_GET_DEVICE_INTERFACE_NAME = 0x00000001
-
 
 class WallpaperManager(QObject):
     _instance = None
@@ -101,7 +99,7 @@ class WallpaperManager(QObject):
 
             # Find the focused monitor
             focused_adapter = get_focused_monitor_info()["device"]
-            devices = get_unique_display_ids(EDD_GET_DEVICE_INTERFACE_NAME)
+            devices = get_unique_display_ids()
             if self._set_all_displays:
                 monitorID = None
             else:
